@@ -1,0 +1,108 @@
+import random
+from aiogram import Bot, Dispatcher
+from aiogram.types import Message
+from aiogram.dispatcher.filters import Text, Command
+
+BOT_TOKEN: str = '5937214811:AAFEvE7hKAUwTCuVMJSBt1YMiEm_DY7HxVg' 
+
+bot: Bot = Bot(BOT_TOKEN)
+dp: Dispatcher = Dispatcher()
+
+ATTEMPS: int = 5
+
+user: dict = {'in_game': False,
+              'secret_number': None,
+			  'attempts': None,
+			  'total_games': 0,
+			  'wins': 0}
+
+def get_random_number() -> int:
+    return random.randit(1, 100)
+
+@dp.message(Comman(commands=['stat']))
+async def process_stat_command(message: Message):
+    await message.answer(f'Total games: {user["tatal_games"]}\n'
+	                     f'games won: {user["wins"]}')	
+
+@dp.message(Command(commands=['help']))
+async def process_help_command(message: Message):
+    await message.answer(f'Rules of the game\n\n I guess the number from 1 to 100,'
+	                     f'And you have to guess\nYou have {ATTEMPTS}'
+						 f'attemps\n\nAvailable commands:\n/help - game '
+						 f'rooles and command list\n/cancel - exit the game\n'
+						 f'/stat - see statistics\n\nLets play?')
+
+@dp.message(Command(commands=['start']))
+async def process_start_command(message: Message):
+    await message.answer('Hello!\nLets play game "Guess a number"?\n\n'
+	                     'To get the rules of the game and the list of available'
+						 'commands - send command /help')
+
+@dp.message(Command(commands=['cancel']))
+async def process_cancel_command(message: Message):
+    if user['in_game']:
+	    await message.answer('You are out of the game. If you want to play'
+		                     'again - write about it')
+	    user['in_game'] = False
+    else:
+	    await message.answer('But we dont play with you.'
+		                     'Maybe well play a game?')
+
+@dp.message(Text(text=['yes','lets play','game'], ignore_case=True))
+async def process_positive_answer(message: Message):
+    if not user['in_game']:
+        await message.answer('Hooray!\n\mI guessed a number from 1 to 100,'
+                             'try to guess!')
+        user['in_game'] = True
+        user['secret_number'] = get_random_number()
+        user['attempts'] = ATTEMPTS
+    else:
+        await message.answer('As long as we play the game I can'
+		                     'react only on numbers from 1 to 100'
+							 'and the commands /cancel and /stat')
+
+@dp.message(Text(text=['No','Dont won'], ignore_case=True))
+async def process_negative_answer(message: Message):
+    if not user['in_game']:
+	    await message.answer('Too bad:(\n\nIf you want to play,'
+		                     'just write about it')
+    else:
+        await message.answer('We are playing with you right now.'
+		                     'Send please numbers from 1 to 100')
+
+@dp.message(lambda x: x.text and x.text.isdigit() and 1 <= int(x.text) <= 100)
+async def process_numbers_answer(message: Message):
+    if user['in_game']:
+        if int(message.text) == user['secret_number']:
+            await message.answer('Hooray!!!You guessed the number!\n\n'
+                                 'Can we play some more?')
+            user['in_game'] = False
+            user['total_games'] += 1
+            user['wins'] += 1
+        elif int(message.text) > user['secret_number']:
+            await message.answer('My number is less')
+            user['attempts'] -= 1
+        elif int(message.text) < user['secret_number']:
+            await message.answer('My number is greater')
+            user['attempts'] -= 1
+        if user['attempts'] == 0:
+            await message.answer(f'Unfortunately you have no more'
+       	                         f'tries. You lost\n\nMy number is'
+                                 f'was {user["secret_number"]}\n\n'
+                                 f'Lets will we play again?')
+            user['in_game'] = False
+            user['total_games'] += 1
+    else:
+        await message.answer('We are not playing yet. You want to play?')
+
+@dp.message()
+async def process_other_text_answer(message: Message):
+    if user['in_game']:
+        await message.answer('We are playing with you now\n'
+                             'Please send numbers from 1 to 100')
+    else:
+        await message.answer('I am a pretty limited bot, come on\n'
+                             'just play a game?')
+
+if __name__ == '__main__':
+    dp.run_polling(bot)
