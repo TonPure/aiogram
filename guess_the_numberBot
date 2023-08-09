@@ -1,14 +1,15 @@
 import random
 from aiogram import Bot, Dispatcher
 from aiogram.types import Message
-from aiogram.dispatcher.filters import Text, Command
+from aiogram.filters import Command
+from aiogram import F
 
 BOT_TOKEN: str = '5937214811:AAFEvE7hKAUwTCuVMJSBt1YMiEm_DY7HxVg' 
 
 bot: Bot = Bot(BOT_TOKEN)
 dp: Dispatcher = Dispatcher()
 
-ATTEMPS: int = 5
+ATTEMPTS: int = 5
 
 user: dict = {'in_game': False,
               'secret_number': None,
@@ -17,11 +18,11 @@ user: dict = {'in_game': False,
 			  'wins': 0}
 
 def get_random_number() -> int:
-    return random.randit(1, 100)
+    return random.randint(1, 100)
 
-@dp.message(Comman(commands=['stat']))
+@dp.message(Command(commands=['stat']))
 async def process_stat_command(message: Message):
-    await message.answer(f'Total games: {user["tatal_games"]}\n'
+    await message.answer(f'Total games: {user["total_games"]}\n'
 	                     f'games won: {user["wins"]}')	
 
 @dp.message(Command(commands=['help']))
@@ -48,10 +49,10 @@ async def process_cancel_command(message: Message):
 	    await message.answer('But we dont play with you.'
 		                     'Maybe well play a game?')
 
-@dp.message(Text(text=['yes','lets play','game'], ignore_case=True))
+@dp.message(F.text.lower().in_(['yes','lets play','game']))
 async def process_positive_answer(message: Message):
     if not user['in_game']:
-        await message.answer('Hooray!\n\mI guessed a number from 1 to 100,'
+        await message.answer('Hooray!\n\nI guessed a number from 1 to 100,'
                              'try to guess!')
         user['in_game'] = True
         user['secret_number'] = get_random_number()
@@ -61,7 +62,7 @@ async def process_positive_answer(message: Message):
 		                     'react only on numbers from 1 to 100'
 							 'and the commands /cancel and /stat')
 
-@dp.message(Text(text=['No','Dont won'], ignore_case=True))
+@dp.message(F.text.lower().in_(['no','dont won']))
 async def process_negative_answer(message: Message):
     if not user['in_game']:
 	    await message.answer('Too bad:(\n\nIf you want to play,'

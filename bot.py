@@ -1,5 +1,5 @@
 from aiogram import Bot, Dispatcher, F
-from aiogram.filters import Command
+from aiogram.filters import Command, Text
 from aiogram.types import Message, ContentType
 
 API_TOKEN: str = '5937214811:AAFEvE7hKAUwTCuVMJSBt1YMiEm_DY7HxVg'
