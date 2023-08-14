@@ -1,9 +1,12 @@
 import random
+import requests
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message
-from aiogram.filters import Command
+from aiogram.filters import Command, BaseFilter
 
 BOT_TOKEN: str = '5937214811:AAFEvE7hKAUwTCuVMJSBt1YMiEm_DY7HxVg' 
+
+admin_ids: list[int] = [1086031662]
 
 bot: Bot = Bot(BOT_TOKEN)
 dp: Dispatcher = Dispatcher()
@@ -14,6 +17,17 @@ users: dict = {}
 
 def get_random_number() -> int:
     return random.randint(1, 100)
+
+class IsAdmin(BaseFilter):
+    def __init__(self, admin_ids: list[int]) -> None:
+        self.admin_ids = admin_ids
+
+    async def __call__(self, message: Message) -> bool:
+        return message.from_user.id in self.admin_ids
+
+@dp.message(IsAdmin(admin_ids))
+async def answer_if_admins_update(message: Message):
+    await message.answer(text='You are greate admin!')
 
 @dp.message(Command(commands=['stat']))
 async def process_stat_command(message: Message):
@@ -34,6 +48,7 @@ async def process_help_command(message: Message):
 
 @dp.message(Command(commands=['start']))
 async def process_start_command(message: Message):
+    print(message.from_user.id)
     await message.answer('Hello!\nLets play game "Guess a number"?\n\n'
                          'To get the rules of the game and the list of available'
                          'commands - send command /help')
@@ -47,13 +62,21 @@ async def process_start_command(message: Message):
 
 @dp.message(Command(commands=['cancel']))
 async def process_cancel_command(message: Message):
-    if users[message.from_user.id]['in_game']:
-        await message.answer('You are out of the game. If you want to play'
-                             'again - write about it')
-        users[message.from_user.id]['in_game'] = False
+	
+    if message.from_user.id not in users:
+        users[message.from_user.id] = {'in_game': False,
+                                       'secret_number': None,
+                                       'attempts': None,
+                                       'total_games': 0,
+                                       'wins': 0}
     else:
-        await message.answer('But we dont play with you.'
-                             'Maybe well play a game?')
+        if users[message.from_user.id]['in_game']:
+            await message.answer('You are out of the game. If you want to play'
+                                 'again - write about it')
+            users[message.from_user.id]['in_game'] = False
+        else:
+            await message.answer('But we dont play with you.'
+                                 'Maybe well play a game?')
 
 @dp.message(F.text.lower().in_(['yes','lets play','game']))
 async def process_positive_answer(message: Message):
@@ -78,6 +101,14 @@ async def process_positive_answer(message: Message):
 
 @dp.message(F.text.lower().in_(['no','dont won']))
 async def process_negative_answer(message: Message):
+	
+    if message.from_user.id not in users:
+        users[message.from_user.id] = {'in_game': False,
+                                       'secret_number': None,
+                                       'attempts': None,
+                                       'total_games': 0,
+                                       'wins': 0}
+
     if not users[message.from_user.id]['in_game']:
         await message.answer('Too bad:(\n\nIf you want to play,'
                              'just write about it')
