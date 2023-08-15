@@ -1,8 +1,6 @@
-import random
-import requests
-from aiogram import Bot, Dispatcher, F
+from aiogram import Bot, Dispatcher
 from aiogram.types import Message
-from aiogram.filters import Command, BaseFilter
+from aiogram.filters import BaseFilter 
 
 BOT_TOKEN: str = '5937214811:AAFEvE7hKAUwTCuVMJSBt1YMiEm_DY7HxVg' 
 
@@ -11,22 +9,22 @@ dp: Dispatcher = Dispatcher()
 
 class NumbersInMessage(BaseFilter):
     async def __call__(self, message: Message) -> bool | dict[str, list[int]]:
-	    numbers = []
-		for word on message.text.split():
-		normalized_word = word.replace('.', '').replace(',', '').strip()
-		    if normalized_word.isdigit():
-		        numbers.append(int(normalized_word))
-		if numbers:
-		    return {'numbers': numbers}
-		return False
+        numbers = {}
+        words: [] = message.text.split()
+        for word in words:
+            print(word)
+            if word.isdigit():
+                if int(word) in numbers:
+                    numbers[int(word)]+=1
+                else:
+                    numbers[int(word)]=1
+        if numbers:
+            return {'numbers': numbers}
+        return False
 
-@dp.message(Text(startswith='найди числа', ignore_case=True), NumbersInMesage())
-async def process_if_numbers(message: Message, numbers: list[int]):
-    await message.answer( text=f'Нашел: {", ".join(str(num) for num in numbers)}')
-
-@dp.message(Text(startswith='найди числа', ignore_case=True))
-async def process_if_not_numbers(message: Message):
-    await message.answer( text = 'Не нашел что-то')
+@dp.message(NumbersInMessage())
+async def process_if_not_numbers(message: Message, numbers: list[int]):
+    await message.answer( text = 'Вот что-то')
 
 if __name__ == '__main__':
     dp.run_polling(bot)
