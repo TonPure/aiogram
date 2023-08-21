@@ -1,11 +1,14 @@
+from config import load_config
 from aiogram import Bot, Dispatcher
 from aiogram.types import Message
 from aiogram.filters import BaseFilter 
+from environs import Env
 
-BOT_TOKEN: str = '5937214811:AAFEvE7hKAUwTCuVMJSBt1YMiEm_DY7HxVg' 
+config = load_config('.env')
 
-bot: Bot = Bot(BOT_TOKEN)
+bot: Bot = Bot(config.tg_bot.token)
 dp: Dispatcher = Dispatcher()
+
 
 class NumbersInMessage(BaseFilter):
     async def __call__(self, message: Message) -> bool | dict[str, list[int]]:
@@ -25,6 +28,7 @@ class NumbersInMessage(BaseFilter):
 @dp.message(NumbersInMessage())
 async def process_if_not_numbers(message: Message, numbers: list[int]):
     await message.answer( text = 'Вот что-то')
+    print(message.from_user.id)
 
 if __name__ == '__main__':
     dp.run_polling(bot)

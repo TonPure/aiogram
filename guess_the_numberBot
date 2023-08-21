@@ -4,9 +4,9 @@ from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message
 from aiogram.filters import Command, BaseFilter
 
-BOT_TOKEN: str = '5937214811:AAFEvE7hKAUwTCuVMJSBt1YMiEm_DY7HxVg' 
+BOT_TOKEN: str = '' 
 
-admin_ids: list[int] = [1086031662]
+admin_ids: list[int] = 
 
 bot: Bot = Bot(BOT_TOKEN)
 dp: Dispatcher = Dispatcher()
